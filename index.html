@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Horse Ranking Puzzle Lab</title>
+  <link
+    rel="icon"
+    href="https://cdn-icons-png.flaticon.com/512/5511/5511666.png"
+  />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="shell">
+    <header class="hero">
+      <div class="hero-copy hero-wide">
+        <div>
+          <p class="eyebrow">Horse Ranking Puzzle</p>
+          <h1>Can 25 horses be fully ordered with only 5-horse heats?</h1>
+        </div>
+        <p class="hero-text">
+          Explore the classic interview puzzle as a live simulation. The app tracks known
+          comparisons, propagates transitive facts, recommends high-value races, and compares
+          multiple solving strategies against the same hidden ordering.
+        </p>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="panel control-panel standout-panel">
+        <div class="panel-head">
+          <h2>Control Center</h2>
+          <p>Switch between manual exploration and strategy-driven auto-solve.</p>
+        </div>
+
+        <div class="toolbar">
+          <label class="field">
+            <span>Mode</span>
+            <select id="modeSelect">
+              <option value="manual">Manual</option>
+              <option value="auto" selected>Auto-Solve</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>Auto Strategy</span>
+            <select id="strategySelect">
+              <option value="merge">Strategy A: Merge-Inspired</option>
+              <option value="tournament">Strategy B: Tournament Tree</option>
+              <option value="greedy">Strategy C: Greedy Info Gain</option>
+            </select>
+          </label>
+        </div>
+
+        <details id="strategyDetails" class="strategy-card strategy-disclosure">
+          <summary class="strategy-summary">
+            <div class="strategy-head">
+              <h3>Strategy Guide</h3>
+              <span id="strategyBadge" class="subtle-tag">Merge-Inspired</span>
+            </div>
+            <span class="strategy-summary-note">What each auto-solver is optimizing</span>
+          </summary>
+          <div class="strategy-body">
+            <p id="strategyDescription" class="muted"></p>
+            <div id="strategyTips" class="strategy-tips"></div>
+          </div>
+        </details>
+
+        <div class="button-cluster">
+          <div class="action-group">
+            <span class="group-label">Run Actions</span>
+            <div class="button-row">
+              <button id="autoStepButton" class="action-button primary">Run 1 Auto Step</button>
+              <button id="autoSolveButton" class="action-button">Auto-Solve Current Strategy</button>
+              <button id="compareAllButton" class="action-button secondary-action">Compare All Strategies</button>
+            </div>
+          </div>
+
+          <div class="option-group">
+            <span class="group-label">Puzzle Options</span>
+            <div class="button-row">
+              <button id="resetButton" class="option-button">Reset Puzzle</button>
+              <button id="revealButton" class="option-button">Reveal Horse Ranking</button>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <section class="panel metrics-panel standout-panel">
+        <div class="panel-head">
+          <h2>Live Metrics</h2>
+          <p>Track progress toward a complete ranking and compare it with the 13-race lower bound.</p>
+        </div>
+        <div class="metric-grid">
+          <div class="metric">
+            <span class="metric-label">Lower Bound</span>
+            <strong id="lowerBoundValue">13 races</strong>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Current Races</span>
+            <strong id="raceCountValue">0</strong>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Solved</span>
+            <strong id="solvedValue">0%</strong>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Known Relations</span>
+            <strong id="knownRelationsValue">0 / 300</strong>
+          </div>
+        </div>
+        <div class="progress-track">
+          <div id="progressBar" class="progress-fill"></div>
+        </div>
+        <p id="progressText" class="card-note">No races yet. Every horse is still fully unknown.</p>
+        <div class="button-row metrics-actions">
+          <button id="why13Button" class="option-button">Why 13?</button>
+        </div>
+
+        <div class="theory-strip">
+          <div>
+            <span class="chip-title">Theory</span>
+            <p>
+              Each race produces one of <strong>5! = 120</strong> outcomes. Since there are
+              <strong>25!</strong> possible full rankings, information theory says any perfect
+              solution needs at least <strong>13 races</strong>.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel race-panel">
+        <div class="panel-head">
+          <h2>Next Race</h2>
+          <p>Select five horses yourself or use the recommendation engine.</p>
+        </div>
+
+        <div class="selection-wrap">
+          <div>
+            <div class="selection-label">Selected Horses</div>
+            <div id="selectedRace" class="selection-pills empty">Choose five horses to race.</div>
+          </div>
+          <div class="selection-actions">
+            <div class="helper-group">
+              <span class="group-label">Selection Helpers</span>
+              <div class="button-row compact">
+                <button id="useRecommendationButton" class="option-button helper-button" title="Fill your next manual race with the app's best current recommendation.">
+                  Use AI Pick
+                </button>
+                <button id="addUncertainButton" class="option-button helper-button" title="Pick the five horses with the widest remaining uncertainty ranges.">
+                  Add Most Uncertain
+                </button>
+                <button id="addBandButton" class="option-button helper-button" title="Build a race around the most crowded middle rank band to separate overlapping horses.">
+                  Fill Rank Gap
+                </button>
+                <button id="clearSelectionButton" class="option-button helper-button" title="Clear the currently selected horses for the next race.">
+                  Clear Selection
+                </button>
+              </div>
+            </div>
+            <div class="action-group">
+              <span class="group-label">Race Action</span>
+              <div class="button-row compact">
+                <button id="runManualRaceButton" class="action-button primary">Race My Selection</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="recommendation-card">
+          <div class="recommendation-head">
+            <h3>Recommendation Engine</h3>
+            <span id="recommendationBadge" class="recommendation-score">Pending</span>
+          </div>
+          <p id="recommendationText">
+            Run a few races to create uncertainty bands, then the app will start steering you
+            toward high-value heats.
+          </p>
+          <p id="recommendationWhy" class="muted"></p>
+        </div>
+
+        <div class="pool-head">
+          <h3>Horse Pool</h3>
+          <p>Green horses are nailed down, amber horses are narrowing, gray horses remain fuzzy.</p>
+        </div>
+        <div id="horsePool" class="horse-pool"></div>
+      </section>
+
+      <section class="panel knowledge-panel">
+        <div class="panel-head">
+          <h2>Knowledge State</h2>
+          <p>Rank intervals and known wins/losses update after every race.</p>
+        </div>
+
+        <div class="knowledge-tabs" role="tablist" aria-label="Knowledge Views">
+          <button id="knowledgeTabLadder" class="knowledge-tab active" type="button" role="tab" aria-selected="true" data-tab="ladder">
+            Rank Ladder
+          </button>
+          <button id="knowledgeTabInsights" class="knowledge-tab" type="button" role="tab" aria-selected="false" data-tab="insights">
+            Insight Panel
+          </button>
+          <button id="knowledgeTabTable" class="knowledge-tab" type="button" role="tab" aria-selected="false" data-tab="table">
+            Table
+          </button>
+        </div>
+
+        <div class="knowledge-panels">
+          <div id="knowledgePanelLadder" class="subpanel knowledge-view active" role="tabpanel">
+            <div class="subpanel-head">
+              <h3>Rank Ladder</h3>
+              <span id="rankSummary" class="subtle-tag">25 horses unresolved</span>
+            </div>
+            <div id="rankBands" class="rank-ladder"></div>
+          </div>
+
+          <div id="knowledgePanelInsights" class="subpanel knowledge-view" role="tabpanel" hidden>
+            <div class="subpanel-head">
+              <h3>Insight Panel</h3>
+              <span class="subtle-tag">Live deductions</span>
+            </div>
+            <div id="insightPanel" class="insight-panel"></div>
+          </div>
+
+          <div id="knowledgePanelTable" class="subpanel knowledge-view" role="tabpanel" hidden>
+            <div class="subpanel-head">
+              <h3>Knowledge Table</h3>
+              <span class="subtle-tag">Per-horse summary</span>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Horse</th>
+                    <th>Races</th>
+                    <th>Min Rank</th>
+                    <th>Max Rank</th>
+                    <th>Certainty</th>
+                    <th>Beats</th>
+                    <th>Lost To</th>
+                  </tr>
+                </thead>
+                <tbody id="knowledgeTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel history-panel">
+        <div class="panel-head">
+          <h2>Race History</h2>
+          <p>Every heat and every strategy decision stays visible for review.</p>
+        </div>
+
+        <div class="history-grid">
+          <div class="subpanel">
+            <div class="subpanel-head">
+              <h3>Recent Races</h3>
+              <span id="historyCount" class="subtle-tag">0 heats</span>
+            </div>
+            <div id="historyList" class="history-list empty-state">No races yet.</div>
+          </div>
+
+          <div class="subpanel">
+            <div class="subpanel-head">
+              <h3>Strategy Log</h3>
+              <span class="subtle-tag">Step-by-step reasoning</span>
+            </div>
+            <div id="strategyLog" class="strategy-log empty-state">Waiting for a strategy run.</div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="comparisonModal" class="modal hidden" aria-hidden="true">
+    <div id="comparisonBackdrop" class="modal-backdrop"></div>
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="comparisonModalTitle">
+      <div class="modal-head">
+        <div>
+          <p class="eyebrow">Comparison Results</p>
+          <h2 id="comparisonModalTitle">All Strategy Outcomes</h2>
+        </div>
+        <button id="closeComparisonModalButton" class="modal-close" aria-label="Close comparison results">Close</button>
+      </div>
+      <p class="muted modal-copy">
+        Each strategy below ran against the same hidden ordering. Use this to compare how close different approaches get to the 13-race lower bound.
+      </p>
+      <div id="comparisonTable" class="comparison-table"></div>
+      <div id="benchmarkTable" class="comparison-table benchmark-table"></div>
+    </div>
+  </div>
+
+  <div id="why13Modal" class="modal hidden" aria-hidden="true">
+    <div id="why13Backdrop" class="modal-backdrop"></div>
+    <div class="modal-dialog theory-dialog" role="dialog" aria-modal="true" aria-labelledby="why13ModalTitle">
+      <div class="modal-head">
+        <div>
+          <p class="eyebrow">Lower Bound</p>
+          <h2 id="why13ModalTitle">Why the answer cannot be below 13</h2>
+        </div>
+        <button id="closeWhy13ModalButton" class="modal-close" aria-label="Close why 13 explainer">Close</button>
+      </div>
+      <div class="explainer-stack">
+        <div class="compare-card">
+          <strong>Step 1: How much information does one race give?</strong>
+          <div>One 5-horse race can finish in <span class="mono">5! = 120</span> different orders.</div>
+        </div>
+        <div class="compare-card">
+          <strong>Step 2: How many total rankings are possible?</strong>
+          <div>The 25 horses could be arranged in <span class="mono">25!</span> full rankings before any races happen.</div>
+        </div>
+        <div class="compare-card">
+          <strong>Step 3: Compare outcomes to possibilities</strong>
+          <div>After <span class="mono">r</span> races, you can distinguish at most <span class="mono">120^r</span> cases. To identify one exact ordering, you need <span class="mono">120^r >= 25!</span>.</div>
+        </div>
+        <div class="compare-card">
+          <strong>Step 4: Solve for r</strong>
+          <div><span class="mono">r >= log(25!) / log(120) = 12.1156...</span>, so any perfect strategy needs at least <span class="mono">13 races</span>.</div>
+        </div>
+        <div class="compare-card">
+          <strong>What this means in the app</strong>
+          <div>The simulator can search for strategies that hit 13 on specific hidden orders, but it should never claim fewer than 13 races are enough in the general case.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script defer src="./app.js"></script>
+</body>
+</html>
