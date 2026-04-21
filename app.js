@@ -456,6 +456,30 @@ function isNarrowedHorse(candidateRanks, threshold = 3) {
   return candidateRanks.length > 1 && candidateRanks.length <= threshold;
 }
 
+function getTotalFeasibleSlots(engine, mode = "detailed") {
+  return engine
+    .getStats(mode)
+    .reduce((sum, entry) => sum + entry.candidateRanks.length, 0);
+}
+
+function getRaceImpact(engine, participants, mode = "detailed") {
+  const beforeKnown = engine.countKnownRelations();
+  const beforeSlots = getTotalFeasibleSlots(engine, mode);
+  const outcome = engine.applyRace(participants);
+  const afterKnown = engine.countKnownRelations();
+  const afterSlots = getTotalFeasibleSlots(engine, mode);
+
+  return {
+    outcome,
+    relationGain: afterKnown - beforeKnown,
+    uncertaintyReduction: beforeSlots - afterSlots,
+    beforeKnown,
+    afterKnown,
+    beforeSlots,
+    afterSlots,
+  };
+}
+
 function hasPerfectMatchingWithAssignment(allowedRanksByHorse, fixedHorse, fixedRank) {
   const horses = HORSES.filter((horse) => horse !== fixedHorse);
   const rankToHorse = new Map([[fixedRank, fixedHorse]]);
@@ -625,7 +649,7 @@ function greedyPick(engine, label) {
   return {
     horses: best.horses,
     explanation:
-      `${label}: this heat is expected to resolve ${best.relationGain} new pairwise relations and shrink total uncertainty by ${best.spanGain}.`,
+      `${label}: this heat is expected to clarify about ${best.relationGain} unresolved pairwise comparisons and tighten a crowded rank band.`,
     preview: best,
   };
 }
@@ -752,12 +776,17 @@ const STRATEGY_DETAILS = {
 function runAutoStep(engine, strategyName) {
   const strategy = STRATEGIES[strategyName];
   const decision = strategy(engine);
-  const outcome = engine.applyRace(
-    decision.horses,
-    strategyLabel(strategyName),
-    decision.explanation
+  const impact = getRaceImpact(engine, decision.horses);
+  const explanation =
+    `${decision.explanation} Actual impact: +${impact.relationGain} known relations, -${impact.uncertaintyReduction} feasible slots.`;
+  const raceEntry = engine.raceHistory[engine.raceHistory.length - 1];
+  raceEntry.label = strategyLabel(strategyName);
+  raceEntry.explanation = explanation;
+  engine.strategyMessages.push(
+    `Race #${raceEntry.number}: ${raceEntry.label} chose ${decision.horses.join(", ")}. ${explanation}`
   );
-  return { ...decision, outcome };
+
+  return { ...decision, ...impact };
 }
 
 function runAutoSolve(hiddenOrder, strategyName, maxRaces = 60) {
@@ -860,7 +889,7 @@ function render() {
   const known = engine.countKnownRelations();
   const progress = Math.round((known / TOTAL_RELATIONS) * 100);
   const detailedStats = engine.getStats("detailed");
-  const exactCount = detailedStats.filter((entry) => entry.span === 1).length;
+  const exactCount = detailedStats.filter((entry) => entry.candidateRanks.length === 1).length;
   const uncertainCount = HORSE_COUNT - exactCount;
 
   elements.lowerBoundValue.textContent = `${LOWER_BOUND} races`;
@@ -1196,11 +1225,13 @@ function runManualRace() {
     return;
   }
 
-  const score = scoreCandidate(state.engine, state.selection);
-  state.engine.applyRace(
-    state.selection,
-    "Manual",
-    `Manual heat. This race revealed ${score.relationGain} new pairwise relations and shrank uncertainty by ${score.spanGain}.`
+  const impact = getRaceImpact(state.engine, state.selection);
+  const raceEntry = state.engine.raceHistory[state.engine.raceHistory.length - 1];
+  raceEntry.label = "Manual";
+  raceEntry.explanation =
+    `Manual heat. This race revealed ${impact.relationGain} new pairwise relations and reduced total feasible slots by ${impact.uncertaintyReduction}.`;
+  state.engine.strategyMessages.push(
+    `Race #${raceEntry.number}: Manual chose ${state.selection.join(", ")}. ${raceEntry.explanation}`
   );
   state.selection = [];
   refreshRecommendation();
