@@ -158,13 +158,13 @@ h1 {
 }
 
 .control-panel {
-  grid-column: span 8;
+  grid-column: span 6;
   background:
     linear-gradient(135deg, rgba(255, 247, 233, 0.98), rgba(248, 228, 189, 0.96));
 }
 
 .metrics-panel {
-  grid-column: span 4;
+  grid-column: span 6;
   background:
     linear-gradient(135deg, rgba(249, 252, 247, 0.98), rgba(225, 242, 233, 0.96));
   border-color: rgba(29, 111, 102, 0.18);
@@ -405,6 +405,18 @@ button.primary {
 
 .button-row.compact button {
   padding-inline: 13px;
+}
+
+.race-action-row {
+  align-items: center;
+}
+
+.action-separator {
+  width: 1px;
+  align-self: stretch;
+  min-height: 38px;
+  background: rgba(24, 33, 38, 0.14);
+  border-radius: 999px;
 }
 
 .metrics-actions {

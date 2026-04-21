@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Horse Ranking Puzzle Lab</title>
+  <title>Horse Ranking Puzzle</title>
   <link
     rel="icon"
     href="https://cdn-icons-png.flaticon.com/512/5511/5511666.png"
@@ -16,10 +16,11 @@
       <div class="hero-copy hero-wide">
         <div>
           <p class="eyebrow">Horse Ranking Puzzle</p>
-          <h1>Can 25 horses be fully ordered with only 5-horse heats?</h1>
+          <h1>Horse Racing</h1>
+          <h2>What's the fewest races of 5 needed to rank all 25 horses?</h2>
         </div>
         <p class="hero-text">
-          Explore the classic interview puzzle as a live simulation. The app tracks known
+          Explore the puzzle as a live simulation. The app tracks known
           comparisons, propagates transitive facts, recommends high-value races, and compares
           multiple solving strategies against the same hidden ordering.
         </p>
@@ -67,18 +68,10 @@
         </details>
 
         <div class="button-cluster">
-          <div class="action-group">
-            <span class="group-label">Run Actions</span>
-            <div class="button-row">
-              <button id="autoStepButton" class="action-button primary">Run 1 Auto Step</button>
-              <button id="autoSolveButton" class="action-button">Auto-Solve Current Strategy</button>
-              <button id="compareAllButton" class="action-button secondary-action">Compare All Strategies</button>
-            </div>
-          </div>
-
           <div class="option-group">
             <span class="group-label">Puzzle Options</span>
             <div class="button-row">
+              <button id="compareAllButton" class="option-button">Compare All Strategies</button>
               <button id="resetButton" class="option-button">Reset Puzzle</button>
               <button id="revealButton" class="option-button">Reveal Horse Ranking</button>
             </div>
@@ -90,7 +83,7 @@
       <section class="panel metrics-panel standout-panel">
         <div class="panel-head">
           <h2>Live Metrics</h2>
-          <p>Track progress toward a complete ranking and compare it with the 13-race lower bound.</p>
+          <p>Track progress toward a complete ranking and compare it with the theoretical lower bound.</p>
         </div>
         <div class="metric-grid">
           <div class="metric">
@@ -146,7 +139,7 @@
               <span class="group-label">Selection Helpers</span>
               <div class="button-row compact">
                 <button id="useRecommendationButton" class="option-button helper-button" title="Fill your next manual race with the app's best current recommendation.">
-                  Use AI Pick
+                  Use Suggested Race
                 </button>
                 <button id="addUncertainButton" class="option-button helper-button" title="Pick the five horses with the widest remaining uncertainty ranges.">
                   Add Most Uncertain
@@ -161,8 +154,11 @@
             </div>
             <div class="action-group">
               <span class="group-label">Race Action</span>
-              <div class="button-row compact">
+              <div class="button-row compact race-action-row">
                 <button id="runManualRaceButton" class="action-button primary">Race My Selection</button>
+                <span class="action-separator" aria-hidden="true"></span>
+                <button id="autoStepButton" class="action-button">Run 1 Auto-Solve Step</button>
+                <button id="autoSolveButton" class="action-button">Auto-Solve Current Strategy</button>
               </div>
             </div>
           </div>

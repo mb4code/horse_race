@@ -438,6 +438,24 @@ function computeFeasibleRanks(allowedRanksByHorse) {
   return feasible;
 }
 
+function hasRankSlotGap(candidateRanks) {
+  if (!candidateRanks || candidateRanks.length <= 1) {
+    return false;
+  }
+
+  for (let index = 1; index < candidateRanks.length; index += 1) {
+    if (candidateRanks[index] !== candidateRanks[index - 1] + 1) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function isNarrowedHorse(candidateRanks, threshold = 3) {
+  return candidateRanks.length > 1 && candidateRanks.length <= threshold;
+}
+
 function hasPerfectMatchingWithAssignment(allowedRanksByHorse, fixedHorse, fixedRank) {
   const horses = HORSES.filter((horse) => horse !== fixedHorse);
   const rankToHorse = new Map([[fixedRank, fixedHorse]]);
@@ -911,13 +929,11 @@ function renderHorsePool() {
 
 function renderBands() {
   const stats = state.engine.getStats("detailed");
-  const exactCount = stats.filter((entry) => entry.span === 1).length;
-  const gapCount = stats.filter(
-    (entry) =>
-      entry.span > 1 &&
-      entry.candidateRanks.length !== entry.maxRank - entry.minRank + 1
+  const exactCount = stats.filter((entry) => entry.candidateRanks.length === 1).length;
+  const narrowedCount = stats.filter((entry) =>
+    isNarrowedHorse(entry.candidateRanks)
   ).length;
-  elements.rankSummary.textContent = `${exactCount} exact, ${gapCount} with slot gaps`;
+  elements.rankSummary.textContent = `${exactCount} exact, ${narrowedCount} narrowed`;
 
   const headerCells = Array.from({ length: HORSE_COUNT }, (_, index) => {
     const rank = index + 1;
@@ -929,7 +945,7 @@ function renderBands() {
       const cells = Array.from({ length: HORSE_COUNT }, (_, index) => {
         const rank = index + 1;
         const isCandidate = entry.candidateRanks.includes(rank);
-        const isExact = entry.span === 1 && entry.minRank === rank;
+        const isExact = entry.candidateRanks.length === 1 && entry.candidateRanks[0] === rank;
         const classes = [
           "ladder-slot",
           isCandidate ? "candidate" : "blocked",
