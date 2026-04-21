@@ -296,6 +296,19 @@ button.primary {
   border-color: rgba(24, 33, 38, 0.14);
 }
 
+.accent-button {
+  background: linear-gradient(135deg, rgba(29, 111, 102, 0.95), rgba(44, 141, 131, 0.92));
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 10px 22px rgba(29, 111, 102, 0.16);
+}
+
+.accent-button:hover {
+  background: linear-gradient(135deg, rgba(24, 98, 91, 0.98), rgba(39, 126, 117, 0.96));
+  color: white;
+  border-color: transparent;
+}
+
 .helper-button {
   background: rgba(255, 249, 240, 0.95);
 }
