@@ -659,6 +659,69 @@ button.primary {
   border: 1px solid rgba(24, 33, 38, 0.08);
 }
 
+.comparison-loading {
+  align-items: center;
+  text-align: center;
+  padding: 28px 20px;
+  gap: 12px;
+}
+
+.horse-loader {
+  width: 64px;
+  height: 64px;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 4px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(29, 111, 102, 0.14), rgba(197, 95, 45, 0.14));
+  color: var(--accent-2);
+  font-size: 2rem;
+  animation: horse-bob 900ms ease-in-out infinite;
+}
+
+.loading-dots {
+  display: inline-flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+.loading-dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(29, 111, 102, 0.48);
+  animation: loading-pulse 900ms ease-in-out infinite;
+}
+
+.loading-dots span:nth-child(2) {
+  animation-delay: 120ms;
+}
+
+.loading-dots span:nth-child(3) {
+  animation-delay: 240ms;
+}
+
+@keyframes horse-bob {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes loading-pulse {
+  0%, 100% {
+    opacity: 0.35;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 .rank-ladder {
   gap: 8px;
   overflow-x: auto;

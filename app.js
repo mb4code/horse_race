@@ -773,26 +773,48 @@ const STRATEGY_DETAILS = {
   },
 };
 
-function runAutoStep(engine, strategyName) {
+function runAutoStep(engine, strategyName, options = {}) {
+  const {
+    includeImpact = true,
+    impactMode = "detailed",
+    writeStrategyLog = true,
+  } = options;
   const strategy = STRATEGIES[strategyName];
   const decision = strategy(engine);
-  const impact = getRaceImpact(engine, decision.horses);
+  const label = strategyLabel(strategyName);
+
+  if (!includeImpact) {
+    const outcome = engine.applyRace(decision.horses, label, "");
+    const raceEntry = engine.raceHistory[engine.raceHistory.length - 1];
+    raceEntry.label = label;
+    raceEntry.explanation = decision.explanation;
+    if (writeStrategyLog) {
+      engine.strategyMessages.push(
+        `Race #${raceEntry.number}: ${label} chose ${decision.horses.join(", ")}. ${decision.explanation}`
+      );
+    }
+    return { ...decision, outcome };
+  }
+
+  const impact = getRaceImpact(engine, decision.horses, impactMode);
   const explanation =
     `${decision.explanation} Actual impact: +${impact.relationGain} known relations, -${impact.uncertaintyReduction} feasible slots.`;
   const raceEntry = engine.raceHistory[engine.raceHistory.length - 1];
-  raceEntry.label = strategyLabel(strategyName);
+  raceEntry.label = label;
   raceEntry.explanation = explanation;
-  engine.strategyMessages.push(
-    `Race #${raceEntry.number}: ${raceEntry.label} chose ${decision.horses.join(", ")}. ${explanation}`
-  );
+  if (writeStrategyLog) {
+    engine.strategyMessages.push(
+      `Race #${raceEntry.number}: ${raceEntry.label} chose ${decision.horses.join(", ")}. ${explanation}`
+    );
+  }
 
   return { ...decision, ...impact };
 }
 
-function runAutoSolve(hiddenOrder, strategyName, maxRaces = 60) {
+function runAutoSolve(hiddenOrder, strategyName, maxRaces = 60, options = {}) {
   const engine = new RankingEngine(hiddenOrder);
   while (!engine.isSolved() && engine.raceHistory.length < maxRaces) {
-    runAutoStep(engine, strategyName);
+    runAutoStep(engine, strategyName, options);
   }
   return engine;
 }
@@ -1252,11 +1274,31 @@ function runSelectedStrategySolve() {
   render();
 }
 
-function renderComparison(hiddenOrder) {
+function showComparisonLoading() {
+  openComparisonModal();
+  elements.comparisonTable.className = "comparison-table";
+  elements.comparisonTable.innerHTML = `
+    <div class="compare-card comparison-loading">
+      <div class="horse-loader" aria-hidden="true">♞</div>
+      <strong>Running all strategy comparisons...</strong>
+      <div class="muted">Testing the same hidden order across all three solvers, then sampling benchmark runs.</div>
+      <div class="loading-dots" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  `;
+  elements.benchmarkTable.className = "comparison-table benchmark-table";
+  elements.benchmarkTable.innerHTML = "";
+}
+
+function renderComparisonResults(hiddenOrder) {
   const strategies = ["merge", "tournament", "greedy"];
   const results = strategies.map((name) => ({
     name,
-    engine: runAutoSolve(hiddenOrder, name),
+    engine: runAutoSolve(hiddenOrder, name, 60, {
+      includeImpact: false,
+      writeStrategyLog: true,
+    }),
   }));
 
   elements.comparisonTable.className = "comparison-table";
@@ -1280,11 +1322,15 @@ function renderComparison(hiddenOrder) {
     .join("");
 
   const benchmarkTrials = 6;
+  const benchmarkOrders = Array.from({ length: benchmarkTrials }, () => shuffle(HORSES));
   const benchmark = strategies.map((name) => {
     const raceCounts = [];
     let hitLowerBound = 0;
-    for (let trial = 0; trial < benchmarkTrials; trial += 1) {
-      const engine = runAutoSolve(shuffle(HORSES), name);
+    for (const order of benchmarkOrders) {
+      const engine = runAutoSolve(order, name, 60, {
+        includeImpact: false,
+        writeStrategyLog: false,
+      });
       raceCounts.push(engine.raceHistory.length);
       if (engine.raceHistory.length === LOWER_BOUND) {
         hitLowerBound += 1;
@@ -1320,8 +1366,15 @@ function renderComparison(hiddenOrder) {
       )
       .join("")}
   `;
+}
 
-  openComparisonModal();
+function renderComparison(hiddenOrder) {
+  showComparisonLoading();
+  window.requestAnimationFrame(() => {
+    window.setTimeout(() => {
+      renderComparisonResults(hiddenOrder);
+    }, 30);
+  });
 }
 
 function openComparisonModal() {
